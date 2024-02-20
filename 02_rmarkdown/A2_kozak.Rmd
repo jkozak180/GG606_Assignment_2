@@ -9,3 +9,135 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+## 1. Loading Things: \
+
+##### 1.1: Loading Packages \
+Load in any and all packages required to manipulate, transform, and illustrate the data given.
+```{r Loading Packages, include=TRUE}
+#Data:
+library(cancensus)     #Package of Canadian census data to be used for assignment
+#Functional:
+library(tidyverse)     #Package to process our data, stylized formation
+library(dplyr)         #Sub tidyverse package for data manipulation 
+library(magrittr)      #Package to help coding sequencing 
+library(janitor)       #Package for 'clean_names()' function
+library(readr)         #Package to help parse rectangular data
+library(stringr)       #Package to deal w/ NAs and manipulate cols/data
+library(lubridate)     #Package for date processing and plotting
+library(broom.mixed)   #Package to clean diverse model outputs
+#Aesthetics:
+library(ggplot2)       #Package to generate plotted data
+library(patchwork)     #Package for extensive plotted data configuration 
+library(ggthemes)      #Package for extra themes, scales, and geoms for plotted data
+library(RColorBrewer)  #Package to colour plots
+library(viridis)       #Package to colour plots
+
+library(here)          #Package to set working directory via `.Rproj`
+getwd()                #Function to affirm working directory 
+```
+
+##### 1.2: Loading Data 
+The data being used here is an R package titled `cancensus` but requires use of an API key (since it is a working library package). We have set a local cache path in order to draw this information much faster. 
+```{r Loading Data Cache, include=TRUE}
+set_cancensus_api_key('<CensusMapper_bae5c1c5a3d31a162c898f63dd424bb3>', install=TRUE)
+set_cancensus_cache_path('<local cache path>', install=TRUE)  #set within local 
+```
+
+________________________________________________________________________________
+## 2. Manipulating Data: \
+
+##### 2.1: Composing The Main Dataset(s): \
+There are a few conditions which must be met in order to successfully complete this assignment: \
+1. has a name that starts with same letter as your first name or last name (JK); \
+2. is comprised of at least 30 geographic units; and \
+3. is somewhere that you have not personally visited; and \
+4. involves at least three census dates. \
+
+
+Firstly, we need to see what kind of data is accessible to us within the entire `cancensus` data package of each Canadian census year (1996, 2001, 2006, 2011, 2016, and 2021). I have created these into new data frame objects, but this is just a personal preference in order to more easily re-call upon these vectors and the data columns that they contain. It appears that with each year more data variables were collected with each census date (with the exception of 2001). This makes sense as the ease of accessibility and better record collection practices throughout time are implemented. \
+
+*Side note: if we wanted to do a longer time series we would filter and include only columns that are contained within the 1996 census... if we do not care or are only interested in variables that do not appear earlier within the census history obviously we would not.*
+```{r View Data Available Within Each Census Year, include=TRUE}
+vect1996=list_census_vectors("CA1996")   #1,858 rows of data columns
+vect01=list_census_vectors("CA01")       #1,725 rows of data columns
+vect06=list_census_vectors("CA06")      #2,175 rows of data columns
+vect11=list_census_vectors("CA11")      #3,875 rows of data columns
+vect16=list_census_vectors("CA16")      #6,623 rows of data columns
+vect21=list_census_vectors("CA21")      #7,709 rows of data columns
+```
+
+
+According to condition one, this assignment must be based on geographic locations that start with the first letter of my given or surname. So, next I want to see what locations within Canada either start with a "J" or "K" and if a particular geographic region appears within all census years, or not. \
+
+I first created a new column for each census regions list to denote what year the data came from and omitted columns that I didn't care about (also no `'duplicate.x'` cols etc.). Since each 'newly' created data set columns were organized in the same order, and I had manually created a new `census_year` column which depicted what year the data came from, I was able to use the `bind_rows` function. Had I **not** generated this new column ahead of time, I would have had to have added additional steps that would have automatically done this, but this way was much easier. 
+```{r Determine Geographic Regions within Census Years pt 1., include=TRUE}
+#Year 1996
+CA1996_regions=list_census_regions("CA1996") %>%      #create data frame object
+  mutate(census_year="CA1996") %>%                    #create new col w/ census year
+  select(region, name, pop, census_year)              #keep these cols only 
+#Year 2001
+CA01_regions=list_census_regions("CA01") %>%
+  mutate(census_year="CA01") %>%
+  select(region, name, pop, census_year)
+#Year 2006
+CA06_regions=list_census_regions("CA06") %>%
+  mutate(census_year="CA06") %>%
+   select(region, name, pop, census_year)
+#Year 2011   
+CA11_regions=list_census_regions("CA11") %>%
+  mutate(census_year="CA11") %>%
+   select(region, name, pop, census_year)
+#Year 2016
+CA16_regions=list_census_regions("CA16") %>%
+  mutate(census_year="CA16") %>%
+   select(region, name, pop, census_year)
+#Year 2021
+CA21_regions=list_census_regions("CA21") %>%
+  mutate(census_year="CA21") %>%
+   select(region, name, pop, census_year)
+
+#Create one new data frame with all census data years by plopping one year 
+# after the year on top of each other sequentially and assign it to a data frame 
+# name generating a callable object.
+all_regions <-                        
+  bind_rows(CA1996_regions, CA01_regions, CA06_regions, 
+            CA11_regions, CA16_regions, CA21_regions)
+```
+
+Condition three states that any location visited by the coder (i.e., me) cannot be used for this assessment. Since I live in, and have therefore visited, the Kitchener-Waterloo tri-state area this location alongside others must be removed from our regional data set. 
+```{r Determine Geographic Regions within Census Years pt 2., include=TRUE}
+all_regions_JK=all_regions %>%                            #create new data frame object
+  filter(str_starts(name, "J")|str_starts(name, "K")) %>% #only places with "J" or "K"
+  arrange(name) %>%                                       #alphabetized by name
+  filter(!(name %in% c("Kelowna", "Kenora", "Kenora, Unorganized", "Kitchener", "Kitchener - Cambridge - Waterloo"))) %>%                 #remove these locations
+#Then I wanted to see which of these locations had the highest population among them
+  arrange(desc(pop))    #undoes previous `arrange()` bc sorted by highest population 
+```
+
+It appears as though the geographic region of Kingston, ON consistently had the highest population count(s) throughout census years 2001-2021. However, I quickly double checked to see if any population data from the 1996 census year existed but for some reason was just not quite as high. \
+This did in fact return a search hit, and since Kingston is a.) a geographic region sampled throughout all available census years b.) is a place that I have *not* visited c.) starts with the first letter of my surname and d.) has (mostly) the highest population counts for a location meeting the above criteria, I chose to focus my population analysis on this region. 
+
+```{r Quick Count 1, include=TRUE}
+all_regions_JK %>%
+  filter(name=="Kingston", census_year== "CA1996")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
