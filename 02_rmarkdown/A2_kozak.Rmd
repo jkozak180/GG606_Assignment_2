@@ -40,8 +40,18 @@ getwd()                #Function to affirm working directory
 ##### 1.2: Loading Data 
 The data being used here is an R package titled `cancensus` but requires use of an API key (since it is a working library package). We have set a local cache path in order to draw this information much faster. 
 ```{r Loading Data Cache, include=TRUE}
-set_cancensus_api_key('<CensusMapper_bae5c1c5a3d31a162c898f63dd424bb3>', install=TRUE)
-set_cancensus_cache_path('<local cache path>', install=TRUE)  #set within local 
+set_cancensus_api_key('<CensusMapper_bae5c1c5a3d31a162c898f63dd424bb3>', overwrite=FALSE, install=TRUE)
+set_cancensus_cache_path('<local cache path>', overwrite=FALSE, install=TRUE)  #set within local 
+Sys.getenv("CM_API_KEY") #confirm API registery 
+Sys.getenv("CM_CACHE_PATH") #confirm cache patch saved to environ
+```
+
+```{r}
+set_cancensus_api_key('CensusMapper_bae5c1c5a3d31a162c898f63dd424bb3')
+Sys.getenv("CM_API_KEY") 
+```
+```{r}
+rm(list = ls())
 ```
 
 ________________________________________________________________________________
@@ -75,27 +85,27 @@ I first created a new column for each census regions list to denote what year th
 #Year 1996
 CA1996_regions=list_census_regions("CA1996") %>%      #create data frame object
   mutate(census_year="CA1996") %>%                    #create new col w/ census year
-  select(region, name, pop, census_year)              #keep these cols only 
+  select(region, name, level, pop, census_year)              #keep these cols only 
 #Year 2001
 CA01_regions=list_census_regions("CA01") %>%
   mutate(census_year="CA01") %>%
-  select(region, name, pop, census_year)
+  select(region, name, level, pop, census_year)
 #Year 2006
 CA06_regions=list_census_regions("CA06") %>%
   mutate(census_year="CA06") %>%
-   select(region, name, pop, census_year)
+   select(region, name, level, pop, census_year)
 #Year 2011   
 CA11_regions=list_census_regions("CA11") %>%
   mutate(census_year="CA11") %>%
-   select(region, name, pop, census_year)
+   select(region, name, level, pop, census_year)
 #Year 2016
 CA16_regions=list_census_regions("CA16") %>%
   mutate(census_year="CA16") %>%
-   select(region, name, pop, census_year)
+   select(region, name, level, pop, census_year)
 #Year 2021
 CA21_regions=list_census_regions("CA21") %>%
   mutate(census_year="CA21") %>%
-   select(region, name, pop, census_year)
+   select(region, name, level, pop, census_year)
 
 #Create one new data frame with all census data years by plopping one year 
 # after the year on top of each other sequentially and assign it to a data frame 
@@ -104,6 +114,11 @@ all_regions <-
   bind_rows(CA1996_regions, CA01_regions, CA06_regions, 
             CA11_regions, CA16_regions, CA21_regions)
 ```
+
+```{r}
+list_census_regions("CA1996")
+```
+
 
 Condition three states that any location visited by the coder (i.e., me) cannot be used for this assessment. Since I live in, and have therefore visited, the Kitchener-Waterloo tri-state area this location alongside others must be removed from our regional data set. 
 ```{r Determine Geographic Regions within Census Years pt 2., include=TRUE}
@@ -142,7 +157,18 @@ Closing Comments: \
 
 
 
+```{r}
+get_census("CA16", regions=list(CMA="46602"),vectors=c("v_CA16_434","v_CA16_435"), level="CSD")
+```
 
+```{r}
+toronto <- get_census(dataset='CA21', regions=list(CMA="35535"),
+                         vectors=c("median_hh_income"="v_CA21_906"), level='CSD')
+```
+```{r}
+toronto <- get_census(dataset='CA21', regions=list(CMA="35535"),
+                      vectors=c("median_hh_income"="v_CA21_906"), level='CSD')
+```
 
 
 
