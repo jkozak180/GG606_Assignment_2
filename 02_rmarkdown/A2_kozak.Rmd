@@ -47,7 +47,7 @@ set_cancensus_cache_path('<local cache path>', install=TRUE)  #set within local
 ________________________________________________________________________________
 ## 2. Manipulating Data: \
 
-##### 2.1: Composing The Main Dataset(s): \
+##### 2.1: Reviewing The Dataset(s): \
 There are a few conditions which must be met in order to successfully complete this assignment: \
 1. has a name that starts with same letter as your first name or last name (JK); \
 2. is comprised of at least 30 geographic units; and \
@@ -123,12 +123,20 @@ all_regions_JK %>%
   filter(name=="Kingston", census_year== "CA1996")
 ```
 
+##### 2.2: Composing The Main Dataset(s): \
+
+Since I have chosen to look at changes in population demographics related to Kingston, ON and it includes data from the 1996 census, this somewhat limits the type of data that we are able to look at over time. However, based on how overwhelming all of the new data variables that are available to us since 2011 (3,000+) this is now much easier to narrow down on what is accessible to us over time. Here is where one would look at all of the variables collected from the 1996 census and go, "Okay, so what is it that I actually wanna know? What kind of story am I gonna try and tell with this data? Is there one? Where is it and with what?" 
 
 
 
 
 
 
+
+
+________________________________________________________________________________
+Closing Comments: \
+- One thing I noticed was how frequently I switched from the Royal 'We' to the first person 'I' throughout the assignment. I do not know how to more readily combat this, so I apologize. 
 
 
 
