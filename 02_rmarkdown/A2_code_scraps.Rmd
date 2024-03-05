@@ -1,0 +1,36 @@
+---
+title: "A2_code_scraps"
+author: "Julia K"
+date: "2024-03-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+list_census_regions("CA01") %>%
+  filter(name=="Winnipeg")
+```
+
+```{r}
+#DAs are just broken down CSDs even further... 
+get_census(dataset="CA01", regions=list(CMA="46602"), 
+            vectors=c("Population density per square kilometre"="v_CA21_6"),level="CSD")
+```
+
+```{r Building Data Frames, include=TRUE}
+#Get 2001 population data from selected vectors for the Kingston region
+CA01_educ_winnipeg=get_census(dataset="CA01", regions=list(CMA="46602"), 
+            vectors=c(CA01_ed_vect$vector), level="CSD")
+```
