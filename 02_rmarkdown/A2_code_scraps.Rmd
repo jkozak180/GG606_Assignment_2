@@ -34,3 +34,10 @@ get_census(dataset="CA01", regions=list(CMA="46602"),
 CA01_educ_winnipeg=get_census(dataset="CA01", regions=list(CMA="46602"), 
             vectors=c(CA01_ed_vect$vector), level="CSD")
 ```
+
+
+```{r}
+mutate(percentage_interval=cut(percentage, breaks=c(0, 25, 50, 75, 100), labels= 
+                                   c("0-25%", "26-50%", "51-75%", "76-100%"))) %>%   
+```
+
