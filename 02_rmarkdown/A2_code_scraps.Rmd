@@ -10,14 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-
-
-
-
-
-
-
-
 ```{r}
 list_census_regions("CA01") %>%
   filter(name=="Winnipeg")
@@ -41,3 +33,42 @@ mutate(percentage_interval=cut(percentage, breaks=c(0, 25, 50, 75, 100), labels=
                                    c("0-25%", "26-50%", "51-75%", "76-100%"))) %>%   
 ```
 
+all_degree_geospatial_fig=
+  plot_grid(CA01_bachelor_fig , CA01_msc_fig, CA01_phd_fig, 
+            CA06_bachelor_fig, CA06_msc_fig, CA06_phd_fig, 
+            CA11_bachelor_fig, CA11_msc_fig, CA11_phd_fig, 
+            CA16_bachelor_fig, CA16_msc_fig, CA16_phd_fig, 
+            CA21_bachelor_fig, CA21_msc_fig, CA21_phd_fig, 
+            ncol=3, nrow=5) 
+
+```{r}
+#if we want all 2001 across (cols=3), then it would go CA01 bachelor, CA01 msc etc.
+all_degree_geospatial_fig=
+  plot_grid(CA01_bachelor_fig + theme(legend.position = "none"), 
+            CA01_msc_fig + theme(legend.position = "none"), 
+            CA01_phd_fig + theme(legend.position = "none"), 
+            CA06_bachelor_fig + theme(legend.position = "none"), 
+            CA06_msc_fig + theme(legend.position = "none"), 
+            CA06_phd_fig + theme(legend.position = "none"), 
+            CA11_bachelor_fig + theme(legend.position = "none"), 
+            CA11_msc_fig + theme(legend.position = "none"), 
+            CA11_phd_fig + theme(legend.position = "none"), 
+            CA16_bachelor_fig + theme(legend.position = "none"), 
+            CA16_msc_fig + theme(legend.position = "none"), 
+            CA16_phd_fig + theme(legend.position = "none"), 
+            CA21_bachelor_fig + theme(legend.position = "none"), 
+            CA21_msc_fig + theme(legend.position = "none"), 
+            CA21_phd_fig + theme(legend.position = "none"), 
+            ncol=3, nrow=5) 
+
+all_degree_geospatial_fig <- all_degree_geospatial_fig + 
+  theme(legend.position = "bottom") +
+  labs(fill = "Degree Type")
+
+# Adjust the size of the text labels
+all_degree_geospatial_fig <- all_degree_geospatial_fig +
+  theme(text = element_text(size = 8))  # Adju            
+        
+
+all_degree_geospatial_fig  
+```
