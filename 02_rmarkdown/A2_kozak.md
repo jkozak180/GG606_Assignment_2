@@ -1,7 +1,7 @@
 ---
-title: "A2_kozak"
+title: "GG606: Assignment 2- Real world data wrangling"
 author: "Julia Kozak"
-date: "2024-03-07"
+date: "March 07, 2024"
 output: 
   html_document:
     toc: true
@@ -122,6 +122,27 @@ library(patchwork)     #Package for extensive plotted data configuration
 ```
 
 ```r
+library(cowplot)       #Package to use a specific function
+```
+
+```
+## Warning: package 'cowplot' was built under R version 4.3.3
+```
+
+```
+## 
+## Attaching package: 'cowplot'
+## 
+## The following object is masked from 'package:patchwork':
+## 
+##     align_plots
+## 
+## The following object is masked from 'package:lubridate':
+## 
+##     stamp
+```
+
+```r
 library(animation)     #Package to generate animations with plots 
 ```
 
@@ -143,6 +164,15 @@ library(ggthemes)      #Package for extra themes, scales, and geoms for plotted 
 
 ```
 ## Warning: package 'ggthemes' was built under R version 4.3.2
+```
+
+```
+## 
+## Attaching package: 'ggthemes'
+## 
+## The following object is masked from 'package:cowplot':
+## 
+##     theme_map
 ```
 
 ```r
@@ -390,7 +420,7 @@ CA21_ed_vect=find_census_vectors("education", dataset="CA21", type=c("total","ma
 
 *Side note: The tricky thing to look out for are vectors that are sub-vectors of initial parent ones... Ex: 'Total population 20 years and over by highest level of schooling' (`v_CA01_1384`) is an initial parent vector that gives birth to a series of sub-vectors like 'Grades 9 to 13' (`v_CA01_1386`), that then trickle down to even DEEPER sub-vectors... like 'With/Without high school graduation certificate' (`v_CA01_1388`/`v_CA01_1387`). This is also only a case and point example for 2001.* \
 
-Ugh. I have a feeling that I am going to have to be pulling out specific vectors from each census year because a.) vectors are not consistent throughout years (ex. people who have a Master's degree have different vector codes) and b.) details or descriptions surrounding the same thing are different too.  
+Ugh. I have a feeling that I am going to have to be pulling out specific vectors from each census year because a.) vectors are not consistent throughout years (ex. people who have a master's degree have different vector codes) and b.) details or descriptions surrounding the same thing are different too.  
 
 
 ```r
@@ -640,14 +670,19 @@ ________________________________________________________________________________
 ## 3. Plotting Data: \
 
 #### 3.1: Reviewing The Dataset(s)... Again \
-Since we have successfully pulled and saved the data to our local cache (I hope), we can now actually look at the data across these census years and try to plot some stuff out. As I mentioned earlier, there is an issue with similar census data vectors that are essentially the same thing, but they go by different vectors or have been slightly modified in spirit (ex. number of people who have a MSc degree). So here is where our plotting story begins. \
+Since we have successfully pulled and saved the data to our local cache (I hope), we can now actually look at the data across these census years and try to plot some stuff out. As I mentioned earlier, there is an issue with similar census data vectors that are essentially the same thing, but they go by different vectors or have been slightly modified in spirit (ex. number of people who have a master's degree). So here is where our plotting story begins. \
 
-1. After looking at all of this data, my intuition would be to first look at general changes in education throughout the region over the years. Do we see more and more people throughout time getting higher and higher education levels? While a great place to start, this task was sadly too great for the amateur little coder. The first mission is to look at the popularity of bachelors degrees over time, which might have some relation to all these PhD's that are supposedly here. \
-2. Do we see a corresponding increase in PhD's appearing throughout time as well? When does this change in PhD holders occur? Has there been an increasing amount of people with bachelors degrees being granted, then into PhD's? Or do we think that we have external visitors coming to complete their research? \
+1. After looking at all of this data, my intuition would be to first look at general changes in education throughout the region over the years. Do we see more and more people throughout time getting higher and higher education levels? While a great place to start, this task was sadly too great for the amateur little coder. The first mission is to look at the popularity of bachelor degrees over time, which might have some relation to all of these PhDs that are supposedly here. \
+2. Do we see a corresponding increase in PhD's appearing throughout time as well? When does this change in PhD holders occur? Has there been an increasing amount of people with bachelor degrees being granted, then into PhDs? Or do we think that we have external visitors coming to complete their research? \
+
 
 
 ##### 3.1.1: Are There Changes in Post-Secondary Degree levels? \
-As was mentioned, the main CSD and DA data sets need to be adjusted to meet each need... I am not sure how one would automate this process, since Statistics Canada themselves seem to choose whatever the hell it is that they want to call each census vector, and that they are not consistent throughout time (partially to denote census year).  Nonetheless, I sifted through each education census vector list and tried to find data that best corresponded to those who were awarded and are bachelor degree holders throughout each census year. However, the conditions change ever so slightly throughout each year (denoted below).    
+As was mentioned, the main CSD and DA data sets need to be adjusted to meet each need... I am not sure how one would automate this process, since Statistics Canada themselves seem to choose whatever the hell it is that they want to call each census vector, and that they are not consistent throughout time (partially to denote census year).  Nonetheless, I sifted through each education census vector list and tried to find data that best corresponded to those who were awarded and are bachelor degree holders throughout each census year. However, the conditions change ever so slightly throughout each year (denoted below). 
+
+**BACHELOR SECTION**
+- Since there are differences in between each census year (i.e., separation of bachelor degree holders within different age categories throughout time), I am going to amalgamate them since I personally don't really care what age category has more at this point in time, I just want to see if there is an overall change in bachelor degrees being held. Also, while plotting the number of bachelor degree holders over time is... interesting, it does not standardize nor account for the potential change in population influx over time. If we were to convert the number of degree holders per area over time into a percentage, it would be slightly more meaningful overtime to compare rates of change. 
+- *Side note:* So, since I had noticed an error that I had made a little too late (error: over estimating bachelor, master's, and PhDs held for 2011-2021 by summing the 'highest level of education 15 years and over' and 'highest level of education 25-65' assuming that the first vector includes the same values from the second) I could've merged all of this data together (since it was more consistent) and made a GIF plot within one frame. But alas. 
 
 ```r
 #We can use the long education vector lists to find vectors that are best suited to our conditions. However, we still need to grab the affiliated shape files, which I did not do when pulling the CSD or DA data... whomp whomp. 
@@ -663,19 +698,17 @@ CA06_bachelor=get_census(dataset='CA06', regions=list(CMA="35521"),
                          "bachelor_degree_65"="v_CA06_1271"),
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 #2011 bachelor degree 15+, 25-64 
+#here I assume that '15 years or over' also includes the 25-65 bracket
 CA11_bachelor=get_census(dataset='CA11', regions=list(CMA="35521"),
-                         vectors=c("bachelor_degree_15"="v_CA11N_1795", 
-                                   "bachelor_degree_25_64"="v_CA11N_1825"), 
+                         vectors=c("bachelor_degree_15"="v_CA11N_1795"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 #2016 bachelor degree 15+, 25-64 
 CA16_bachelor=get_census(dataset='CA16', regions=list(CMA="35521"),
-                         vectors=c("bachelor_degree_15"="v_CA16_5081",
-                                   "bachelor_degree_25_64"="v_CA16_5126"), 
+                         vectors=c("bachelor_degree_15"="v_CA16_5081"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 #2021 bachelor degree 15+, 25-64 
 CA21_bachelor=get_census(dataset='CA21', regions=list(CMA="35521"),
-                         vectors=c("bachelor_degree_15"="v_CA21_5850",
-                                   "bachelor_degree_25_64"="v_CA21_5898"), 
+                         vectors=c("bachelor_degree_15"="v_CA21_5850"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 ```
 
@@ -688,9 +721,9 @@ CA01_bachelor=CA01_bachelor %>%                       #overwrite previous df
   clean_names() %>%                                   #clean col names
   mutate(percentage=round((bachelor_degree_higher     #create proportion %
                            /(population))*100, 2)) %>%#idk why this creates a new col??
-  select(population, bachelor_degree_higher, percentage, everything()) %>% #arrange cols
+  select(population, bachelor_degree_higher, percentage, everything()) %>% #arrng cols
   mutate(census_year="CA01")                          #create census year col
-#2006 we have to do some *additional*... maths *ba boom ching*
+#2006 we have to do some *additional*... maths *ba boom ching* because they divided highest level of education by distinct brackets rather than 15 years+
 CA06_bachelor=CA06_bachelor %>%
   clean_names() %>%
   rowwise() %>%                                     #need function to apply across
@@ -703,45 +736,26 @@ CA06_bachelor=CA06_bachelor %>%
   select(population, bachelor_degree_15_24, bachelor_degree_25_64, bachelor_degree_65, 
          bachelor_degree_total, percentage, everything()) %>%     
   mutate(census_year="CA06") %>%
-  ungroup()       #have to undo the `rowwise()` function because issues later one
-#2011 same thing as previous census year except here onwards things become more standard in their age categories 
+  ungroup()       #have to undo the `rowwise()` function because issues later on
+#2011 same thing as 2001 census year except here onwards things become more standard in their age categories 
 CA11_bachelor=CA11_bachelor %>%
   clean_names() %>%
-  rowwise() %>%                                     
-  mutate(bachelor_degree_total=sum(bachelor_degree_15, bachelor_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((bachelor_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, bachelor_degree_15, bachelor_degree_25_64, bachelor_degree_total, 
-         percentage, everything()) %>%
-  mutate(census_year="CA11") %>%
-  ungroup()
+  mutate(percentage=round((bachelor_degree_15/(population))*100, 2)) %>%
+  select(population, bachelor_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA11") 
 #2016...
 CA16_bachelor=CA16_bachelor %>%
- clean_names() %>%
-  rowwise() %>%                                     
-  mutate(bachelor_degree_total=sum(bachelor_degree_15, bachelor_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((bachelor_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, bachelor_degree_15, bachelor_degree_25_64, bachelor_degree_total, 
-         percentage, everything()) %>%
-  mutate(census_year="CA16") %>%
-  ungroup()
+  clean_names() %>%
+  mutate(percentage=round((bachelor_degree_15/(population))*100, 2)) %>%
+  select(population, bachelor_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA16")
 #2021
 CA21_bachelor=CA21_bachelor %>%
- clean_names() %>%
-  rowwise() %>%                                     
-  mutate(bachelor_degree_total=sum(bachelor_degree_15, bachelor_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((bachelor_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, bachelor_degree_15, bachelor_degree_25_64, bachelor_degree_total, 
-         percentage, everything()) %>%
-  mutate(census_year="CA21") %>%
-  ungroup()
+  clean_names() %>%
+  mutate(percentage=round((bachelor_degree_15/(population))*100, 2)) %>%
+  select(population, bachelor_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA21") 
 ```
-
 
 
 
@@ -758,20 +772,20 @@ CA21_bachelor=CA21_bachelor %>%
 #Figure 1: Change in proportion of bachelor degree holders from 2001-2021
 CA_bachelor_01_21 <-
 animation::saveGIF(
-  expr = {
-    par(pty = "s")                        #set plot aspect ratio to be square
+  expr={
+    par(pty="s")                        #set plot aspect ratio to be square
     plot(CA01_bachelor_fig, width=4.5, height=4.5)
     plot(CA06_bachelor_fig, width=4.5, height=4.5)
     plot(CA11_bachelor_fig, width=4.5, height=4.5)
     plot(CA16_bachelor_fig, width=4.5, height=4.5)
     plot(CA21_bachelor_fig, width=4.5, height=4.5)
   },
-  movie.name = "CA_bachelor_01_21_large.gif"
+  movie.name="CA_bachelor_01_21.gif"
 )
 ```
 
 ```
-## Output at: CA_bachelor_01_21_large.gif
+## Output at: CA_bachelor_01_21.gif
 ```
 
 ```r
@@ -781,11 +795,124 @@ print(CA_bachelor_01_21)
 ```
 ## [1] TRUE
 ```
-Code to generate a GIF from separate plots was found from [here.](https://community.rstudio.com/t/combining-multiple-plots-into-animation-within-r-markdown/63181) Since I did not render this graphic within one logical code chunk due to separate data frames (I could not determine how to best amalgamate them into one) this output does not generate within a knit html file, partially because it is undergoing a save function as well. My apologies for this.
+
+I had attempted to plot all of these individual figures into one grid plot (three cols by degree type x five rows by census year) but this... returned horrible results because it was just waaaay too small + something to do with the plot image size probably needed to be readjusted before this (they appeared square?) but I'm also not sure if this has something to do with using the geospatial data. Alas. \
+Code to generate a GIF from separate plots was found from [here.](https://community.rstudio.com/t/combining-multiple-plots-into-animation-within-r-markdown/63181) Since I did not render this graphic within one logical code chunk due to separate data frames (I could not determine how to best amalgamate the data frames into one prior to error discovery) this output does not generate within a knit html file, partially because it is undergoing a save function as well. My apologies for this. To view the static plots please visit the Appendix. To view the GIF navigate to the 'figures' folder within this repository. 
 
 
-I want to now look at the PhD data spatially as well to see if there is a similar change within the academic landscape to those with bachelor degrees, or if we suddenly see more of a dramatic increase (possible immigration) in PhD holders within the region. Much like with the bachelor degrees, the amount of granted PhD's across age categories will be added together here for simplicity's sake then converted into a percentage.
+I want to now look at the (master's) PhD data spatially as well to see if there is a similar change within the academic landscape to those with bachelor degrees, or if we suddenly see more of a dramatic increase (possible immigration) in PhD holders within the region. Much like with the bachelor degrees, the amount of granted PhDs across age categories will be added together here for simplicity's sake then converted into a percentage. 
+- **Additional note:** So, this is improper of me to do so, but I went back to also compute the master's data. In 2011 we see this large increase in 'PhD' holders but rather these values also include those with a master's degree. So, I wanted to check and see if MSc level data could help explain that large increase (i.e., is it only so big because master's degrees also increase over time or have a large presence within the region?)
+- This data is featured here prior to the PhD data and might appear... a little helter skeltery because of external restraints and starts to get a little sloppy because of increasing frantic-ness, but I wanted to include it. This data should be reviewed more thoroughly to determine quality and that things appear more or less as they should.  
 
+
+**MASTER'S SECTION**
+
+```r
+#We can use the long education vector lists to find vectors that are best suited to our conditions. However, we still need to grab the affiliated shape files, which I did not do when pulling the CSD or DA data... whomp whomp. 
+
+#2001 bachelor degree or higher for 20 yrs old+
+#This data frame can actually stay the same and be reused, since it (unfortunately) includes all levels of higher post-secondary education.
+
+#2006 master degree 15-24, 25-64, 65+
+CA06_msc=get_census(dataset='CA06', regions=list(CMA="35521"),
+                         vectors=c("msc_degree_15_24"= "v_CA06_1246",
+                        "msc_degree_25_64"= "v_CA06_1260",
+                         "msc_degree_65"="v_CA06_1274"),
+                     level='DA', quiet=TRUE, geo_format='sf', labels='short')
+#2011 only OVER A BACHELOR degree 15+, 25-64 (do not know if Master's or PhD)
+CA11_msc=get_census(dataset='CA11', regions=list(CMA="35521"),
+                         vectors=c("overbach_degree_15"="v_CA11N_1798"), 
+                     level='DA', quiet=TRUE, geo_format='sf', labels='short')
+#2016 master degree 15+, 25-64 
+CA16_msc=get_census(dataset='CA16', regions=list(CMA="35521"),
+                         vectors=c("msc_degree_15"="v_CA16_5090"), 
+                     level='DA', quiet=TRUE, geo_format='sf', labels='short')
+#2021 master degree 15+, 25-64 
+CA21_msc=get_census(dataset='CA21', regions=list(CMA="35521"),
+                         vectors=c("msc_degree_15"="v_CA21_5859"), 
+                     level='DA', quiet=TRUE, geo_format='sf', labels='short')
+```
+
+
+```r
+#2001 only has one category... so no need for lots of maths
+#This year has its data sorted by 'bachelor degree or higher' so we keep it the same.
+
+#Here I only changed the 'doctorate' to 'msc' so hopefully things are g//checking these overwritten df math+ % across CA06 and CA16 are good
+#2006 we have to do some *additional*... maths *ba boom ching*
+CA06_msc=CA06_msc %>%
+  clean_names() %>%
+  rowwise() %>%                                     #need function to apply across
+  mutate(msc_degree_total=sum(msc_degree_15_24,     #sum all degree ages 
+                                   msc_degree_25_64, 
+                                   msc_degree_65,
+                                   na.rm=TRUE)) %>%
+  mutate(percentage=round((msc_degree_total         #create new proportion %  
+                           /(population))*100, 2)) %>%
+  select(population, msc_degree_15_24, msc_degree_25_64, msc_degree_65, 
+         msc_degree_total, percentage, everything()) %>%   
+  mutate(census_year="CA06") %>%
+  ungroup()                             
+#2011 same thing as 2001 census year except there is no differentiation between a Master's and PhD holder, only that it is above a bachelor degree  
+CA11_msc=CA11_msc %>%
+  clean_names() %>%
+  mutate(percentage=round((overbach_degree_15/(population))*100, 2)) %>%
+  select(population, overbach_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA11") 
+#2016...
+CA16_msc=CA16_msc %>%
+  clean_names() %>%
+  mutate(percentage=round((msc_degree_15/(population))*100, 2)) %>%
+  select(population, msc_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA16") 
+#2021
+CA21_msc=CA21_msc %>%
+  clean_names() %>%
+  mutate(percentage=round((msc_degree_15/(population))*100, 2)) %>%
+  select(population, msc_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA21")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```r
+#Figure 1: Change in proportion of bachelor degree holders from 2001-2021
+CA_msc_01_21 <-
+animation::saveGIF(
+  expr= {
+    par(pty="s")                        #set plot aspect ratio to be square
+    plot(CA01_msc_fig, width=4.5, height=4.5)
+    plot(CA06_msc_fig, width=4.5, height=4.5)
+    plot(CA11_msc_fig, width=4.5, height=4.5)
+    plot(CA16_msc_fig, width=4.5, height=4.5)
+    plot(CA21_msc_fig, width=4.5, height=4.5)
+  },
+  movie.name="CA_msc_01_21.gif"
+)
+```
+
+```
+## Output at: CA_msc_01_21.gif
+```
+
+```r
+print(CA_msc_01_21)
+```
+
+```
+## [1] TRUE
+```
+
+**PhD SECTION**
 
 ```r
 #We can use the long education vector lists to find vectors that are best suited to our conditions. However, we still need to grab the affiliated shape files, which I did not do when pulling the CSD or DA data... whomp whomp. 
@@ -799,20 +926,17 @@ CA06_phd=get_census(dataset='CA06', regions=list(CMA="35521"),
                         "doctorate_degree_25_64"= "v_CA06_1261",
                          "doctorate_degree_65"="v_CA06_1275"),
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
-#2011 doctorate degree 15+, 25-64 
+#2011 only OVER A BACHELOR degree 15+, 25-64 (do not know if Master's or PhD)
 CA11_phd=get_census(dataset='CA11', regions=list(CMA="35521"),
-                         vectors=c("overbach_degree_15"="v_CA11N_1798", 
-                                   "overbach_degree_25_64"="v_CA11N_1828"), 
+                         vectors=c("overbach_degree_15"="v_CA11N_1798"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 #2016 doctorate degree 15+, 25-64 
 CA16_phd=get_census(dataset='CA16', regions=list(CMA="35521"),
-                         vectors=c("doctorate_degree_15"="v_CA16_5093",
-                                   "doctorate_degree_25_64"="v_CA16_5138"), 
+                         vectors=c("doctorate_degree_15"="v_CA16_5093"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 #2021 doctorate degree 15+, 25-64 
 CA21_phd=get_census(dataset='CA21', regions=list(CMA="35521"),
-                         vectors=c("doctorate_degree_15"="v_CA21_5862",
-                                   "doctorate_degree_25_64"="v_CA21_5910"), 
+                         vectors=c("doctorate_degree_15"="v_CA21_5862"), 
                      level='DA', quiet=TRUE, geo_format='sf', labels='short')
 ```
 
@@ -835,43 +959,26 @@ CA06_phd=CA06_phd %>%
          doctorate_degree_65, doctorate_degree_total, percentage, everything()) %>%   
   mutate(census_year="CA06") %>%
   ungroup()                             
-#2011 same thing as previous census year except there is not differentiation between a Master's and PhD holder, only that it is above a bachelor degree  
+#2011 same thing as 2001 census year except there is no differentiation between a Master's and PhD holder, only that it is above a bachelor degree  
 CA11_phd=CA11_phd %>%
   clean_names() %>%
-  rowwise() %>%                                     
-  mutate(overbach_degree_total=sum(overbach_degree_15, overbach_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((overbach_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, overbach_degree_15, overbach_degree_25_64, overbach_degree_total, 
-         percentage, everything()) %>%
-  mutate(census_year="CA11") %>%
-  ungroup()
+  mutate(percentage=round((overbach_degree_15/(population))*100, 2)) %>%
+  select(population, overbach_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA11") 
 #2016...
 CA16_phd=CA16_phd %>%
- clean_names() %>%
-  rowwise() %>%                                     
-  mutate(doctorate_degree_total=sum(doctorate_degree_15, doctorate_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((doctorate_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, doctorate_degree_15, doctorate_degree_25_64, 
-         doctorate_degree_total, percentage, everything()) %>%
-  mutate(census_year="CA16") %>%
-  ungroup()
+  clean_names() %>%
+  mutate(percentage=round((doctorate_degree_15/(population))*100, 2)) %>%
+  select(population, doctorate_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA16") 
 #2021
 CA21_phd=CA21_phd %>%
- clean_names() %>%
-  rowwise() %>%                                     
-  mutate(doctorate_degree_total=sum(doctorate_degree_15, doctorate_degree_25_64, 
-                                   na.rm=TRUE)) %>%
-  mutate(percentage=round((doctorate_degree_total          
-                           /(population))*100, 2)) %>%
-  select(population, doctorate_degree_15, doctorate_degree_25_64, 
-         doctorate_degree_total, percentage, everything()) %>%
-  mutate(census_year="CA21") %>%
-  ungroup()
+  clean_names() %>%
+  mutate(percentage=round((doctorate_degree_15/(population))*100, 2)) %>%
+  select(population, doctorate_degree_15, percentage, everything()) %>%
+  mutate(census_year="CA21")
 ```
+
 
 
 
@@ -887,15 +994,15 @@ CA21_phd=CA21_phd %>%
 #Figure 1: Change in proportion of bachelor degree holders from 2001-2021
 CA_phd_01_21 <-
 animation::saveGIF(
-  expr = {
-    par(pty = "s")                        #set plot aspect ratio to be square
+  expr= {
+    par(pty="s")                        #set plot aspect ratio to be square
     plot(CA01_phd_fig, width=4.5, height=4.5)
     plot(CA06_phd_fig, width=4.5, height=4.5)
     plot(CA11_phd_fig, width=4.5, height=4.5)
     plot(CA16_phd_fig, width=4.5, height=4.5)
     plot(CA21_phd_fig, width=4.5, height=4.5)
   },
-  movie.name = "CA_phd_01_21.gif"
+  movie.name="CA_phd_01_21.gif"
 )
 ```
 
@@ -910,7 +1017,8 @@ print(CA_phd_01_21)
 ```
 ## [1] TRUE
 ```
-While the spatial data is interesting, we need something to more clearly assist with the change in proportion of degree holders over time, arguably throughout the whole Kingston region not just within DAs. Here, I take the previous bachelor and PhD data frames for each census year and only keep the population and proportion data columns (dropping the shape files), while combining the total number of degree types held. I then merge all of the bachelor data together since they share similar columns and I don't need any of the associated geometry data, followed by combining all of the PhD data together, then combine those two degree data frames together into one big happy data table (ugh).  
+
+While the spatial data is interesting, we need something to more clearly assist with the change in proportion of degree holders over time, and arguably throughout the whole Kingston region- not just within DAs. Here, I take the previous bachelor and PhD data frames for each census year and only keep the population and percentage data columns (dropping the shape files), while combining the total number of degree types held. I then merge all of the bachelor data together since they share similar columns and I don't need any of the associated geometry data, followed by combining all of the master's level onwards data together (respectively), then combine the three degree data frames (Bachelor, master's, PhD) together into one big happy data table (ugh).  
 
 
 ```r
@@ -933,30 +1041,27 @@ CA06_bachelor_proportion=CA06_bachelor %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
   mutate(bach_degree_sum=sum(bachelor_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((bach_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(percentage=round((bach_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2006") %>%                                
   mutate(deg_type="bachelor") %>%                           
   select(population_sum, bach_degree_sum, percentage, deg_type, census_year) %>%
   slice(1)
-#2011: since we used the same total bach degree col title we can recopy main code
+#2011: since we used the same total bach degree col title we can recopy main code. Checked total population/total degree sums * 100 = correct % for 2011 from CA11_bach
 CA11_bachelor_proportion=CA11_bachelor %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
-  mutate(bach_degree_sum=sum(bachelor_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((bach_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(bach_degree_sum=sum(bachelor_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((bach_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2011") %>%                                
   mutate(deg_type="bachelor") %>%                           
   select(population_sum, bach_degree_sum, percentage, deg_type, census_year) %>%
   slice(1)
-#2016:
+#2016: Checked total population/total degree sums*100=correct % for 2016 from CA11_bach
 CA16_bachelor_proportion=CA16_bachelor %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
-  mutate(bach_degree_sum=sum(bachelor_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((bach_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(bach_degree_sum=sum(bachelor_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((bach_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2016") %>%                                
   mutate(deg_type="bachelor") %>%                           
   select(population_sum, bach_degree_sum, percentage, deg_type, census_year) %>%
@@ -965,9 +1070,8 @@ CA16_bachelor_proportion=CA16_bachelor %>%
 CA21_bachelor_proportion=CA21_bachelor %>%
   filter(csd_uid=="3510010") %>%              
   mutate(population_sum=sum(population)) %>%        
-  mutate(bach_degree_sum=sum(bachelor_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((bach_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(bach_degree_sum=sum(bachelor_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((bach_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2021") %>%                                
   mutate(deg_type="bachelor") %>%                           
   select(population_sum, bach_degree_sum, percentage, deg_type, census_year) %>%
@@ -978,6 +1082,73 @@ all_bach_proportions <-
   bind_rows(CA01_bachelor_proportion, CA06_bachelor_proportion, 
             CA11_bachelor_proportion, CA16_bachelor_proportion, 
             CA21_bachelor_proportion)
+
+#The `geometry` shape files appear to have also been kept only for CA01 despite not being selected.. just an error of caution if plotting or want to use, since I am not sure what it has kept or done with the data after so many data frame transformations. Idk why I can't shake it off tbh.   
+```
+
+
+
+```r
+#2001: kept a Master's version too, but can filter it out later before plotting so no duplicates... we reuse the `CA01_bachelor` df because it is the exact same data for phds as bachelors
+CA01_msc_proportion=CA01_bachelor %>%               #create new data frame object
+  filter(region_name=="Kingston") %>%               #only use data from this CSD 
+  mutate(population_sum=sum(population)) %>%        #new col for total DA populations
+  mutate(msc_degree_sum=sum(bachelor_degree_higher, 
+                             na.rm=TRUE)) %>% #new col total bach degrees throughout   
+                          #ALL DAs... previous 'total bach' col added ACROSS ROWS!!!!
+  mutate(percentage=round((msc_degree_sum/
+                             (population_sum))*100, 2)) %>% #new col proportion % 
+  mutate(census_year="2001") %>%                            #new col census year      
+  mutate(deg_type="master") %>%                           #new col degree type
+  select(population_sum, msc_degree_sum, 
+         percentage, deg_type, census_year, -geometry) %>%  #make ALL COLS SAME ORDER
+  slice(1)                                      #only keep row one.. all the same- geo
+#2006: the `msc_degree_total` col here is the sum of degrees across all age ranges within a particular DA.. however, summing this column up is equal to the same thing as summing all of the additional columns individually after coding the `ungroup()` function (was still doing `rowwise()` across.) I double checked these total values in excel and they seem fine. 
+CA06_msc_proportion=CA06_msc %>%
+  filter(region_name=="Kingston") %>%               
+  mutate(population_sum=sum(population)) %>%        
+  mutate(msc_degree_sum=sum(msc_degree_total, na.rm=TRUE)) %>%      
+  mutate(percentage=round((msc_degree_sum/(population_sum))*100, 2)) %>% 
+  mutate(census_year="2006") %>%                                
+  mutate(deg_type="master") %>%                           
+  select(population_sum, msc_degree_sum, percentage, deg_type, census_year) %>%
+  slice(1)
+#2011: this year only has MSc and PhD data lumped together, different col title
+CA11_msc_proportion=CA11_msc %>%
+  filter(region_name=="Kingston") %>%               
+  mutate(population_sum=sum(population)) %>%        
+  mutate(msc_degree_sum=sum(overbach_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((msc_degree_sum/(population_sum))*100, 2)) %>% 
+  mutate(census_year="2011") %>%                                
+  mutate(deg_type="master") %>%                           
+  select(population_sum, msc_degree_sum, percentage, deg_type, census_year) %>%
+  slice(1)
+#2016:since we used the same 'back_15' col title we can recopy main code for 2016-21
+CA16_msc_proportion=CA16_msc %>%
+  filter(region_name=="Kingston") %>%               
+  mutate(population_sum=sum(population)) %>%        
+  mutate(msc_degree_sum=sum(msc_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((msc_degree_sum/(population_sum))*100, 2)) %>% 
+  mutate(census_year="2016") %>%                                
+  mutate(deg_type="master") %>%                           
+  select(population_sum, msc_degree_sum, percentage, deg_type, census_year) %>%
+  slice(1)
+#2021:
+CA21_msc_proportion=CA21_msc %>%
+  filter(csd_uid=="3510010") %>%              
+  mutate(population_sum=sum(population)) %>%        
+  mutate(msc_degree_sum=sum(msc_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((msc_degree_sum/(population_sum))*100, 2)) %>% 
+  mutate(census_year="2021") %>%                                
+  mutate(deg_type="master") %>%                           
+  select(population_sum, msc_degree_sum, percentage, deg_type, census_year) %>%
+  slice(1)
+
+#Merge all of these bachelor datasets together into one new data frame with all census data years by plopping one year after the year on top of each other sequentially and assign it to a data frame name generating a callable object.
+all_msc_proportions <-                        
+  bind_rows(CA01_msc_proportion, CA06_msc_proportion, 
+            CA11_msc_proportion, CA16_msc_proportion, 
+            CA21_msc_proportion)
 
 #The `geometry` shape files appear to have also been kept only for CA01 despite not being selected.. just an error of caution if plotting or want to use, since I am not sure what it has kept or done with the data after so many data frame transformations. Idk why I can't shake it off tbh.   
 ```
@@ -1000,35 +1171,32 @@ CA01_phd_proportion=CA01_bachelor %>%               #create new data frame objec
   select(population_sum, phd_degree_sum, 
          percentage, deg_type, census_year, -geometry) %>%  #make ALL COLS SAME ORDER
   slice(1)                                      #only keep row one.. all the same- geo
-#2006: the `bachelor_degree_total` col here is the sum of degrees across all age ranges within a particular DA.. however, summing this column up is equal to the same thing as summing all of the additional columns individually after coding the `ungroup()` function (was still doing `rowwise()` across.) I double checked these total values in excel and they seem fine. 
+#2006: the `phd_degree_total` col here is the sum of degrees across all age ranges within a particular DA.. however, summing this column up is equal to the same thing as summing all of the additional columns individually after coding the `ungroup()` function (was still doing `rowwise()` across.) I double checked these total values in excel and they seem fine. 
 CA06_phd_proportion=CA06_phd %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
   mutate(phd_degree_sum=sum(doctorate_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((phd_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(percentage=round((phd_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2006") %>%                                
   mutate(deg_type="phd") %>%                           
   select(population_sum, phd_degree_sum, percentage, deg_type, census_year) %>%
   slice(1)
-#2011: since we used the same total bach degree col title we can recopy main code
+#2011: this year only has MSc and PhD data lumped together, different col title
 CA11_phd_proportion=CA11_phd %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
-  mutate(phd_degree_sum=sum(overbach_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((phd_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(phd_degree_sum=sum(overbach_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((phd_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2011") %>%                                
   mutate(deg_type="phd") %>%                           
   select(population_sum, phd_degree_sum, percentage, deg_type, census_year) %>%
   slice(1)
-#2016:
+#2016:since we used the same 'back_15' col title we can recopy main code for 2016-21
 CA16_phd_proportion=CA16_phd %>%
   filter(region_name=="Kingston") %>%               
   mutate(population_sum=sum(population)) %>%        
-  mutate(phd_degree_sum=sum(doctorate_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((phd_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(phd_degree_sum=sum(doctorate_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((phd_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2016") %>%                                
   mutate(deg_type="phd") %>%                           
   select(population_sum, phd_degree_sum, percentage, deg_type, census_year) %>%
@@ -1037,9 +1205,8 @@ CA16_phd_proportion=CA16_phd %>%
 CA21_phd_proportion=CA21_phd %>%
   filter(csd_uid=="3510010") %>%              
   mutate(population_sum=sum(population)) %>%        
-  mutate(phd_degree_sum=sum(doctorate_degree_total, na.rm=TRUE)) %>%      
-  mutate(percentage=round((phd_degree_sum/
-                             (population_sum))*100, 2)) %>% 
+  mutate(phd_degree_sum=sum(doctorate_degree_15, na.rm=TRUE)) %>%      
+  mutate(percentage=round((phd_degree_sum/(population_sum))*100, 2)) %>% 
   mutate(census_year="2021") %>%                                
   mutate(deg_type="phd") %>%                           
   select(population_sum, phd_degree_sum, percentage, deg_type, census_year) %>%
@@ -1057,25 +1224,31 @@ all_phd_proportions <-
 
 ```r
 #Combine the bachelor total proportion data set with the phd total proportion data set by plopping them on top of one another:
-all_bachphd_proportions <-                   #assign new df into callable object
-  bind_rows(all_bach_proportions, all_phd_proportions) %>%
-  pivot_longer(cols=c(bach_degree_sum, phd_degree_sum), 
+all_degree_proportions <-                   #assign new df into callable object
+  bind_rows(all_bach_proportions, all_msc_proportions, all_phd_proportions) %>%
+  pivot_longer(cols=c(bach_degree_sum, msc_degree_sum, phd_degree_sum), 
                names_to="degree_type", 
                values_to="degree_sum",
                values_drop_na=TRUE) %>%#since bind kept NAs for each col causing issues
+  group_by(census_year) %>%
+  mutate(percentage_total=case_when(
+    census_year==2001~ (percentage), 
+    census_year==2011~ sum((percentage[deg_type=="bachelor"]) + 
+                           (percentage[deg_type=="phd"])),
+    TRUE~ sum(percentage))) %>%
   arrange(census_year) %>%
-  select(population_sum, degree_sum, deg_type, everything())
+  select(population_sum, degree_sum, deg_type, percentage_total, everything())
 #`bind_rows` seems to have loaded and transferred data fine, same with the pivot. I am keeping both cols with each degree type so that I can plot whichever I feel + there is no harm to us for keeping both. Otherwise, we would drop one or relabel rows. 
 ```
-
 
 **Now that we have our data frame we can make a mediocre plot!!!!**
 
 
-Code to transform column percentage values to display with the percent symbol taken from [here.](https://thomasadventure.blog/posts/ggplot2-percentage-scale/)
+
+Code to transform column percentage values to display with the percent symbol was taken from [here.](https://thomasadventure.blog/posts/ggplot2-percentage-scale/)
 
 
-*Side note: I could not figure out how to get the proper total degree type numbers to correspondingly appear on the plot. I Reversed the plot order so that 'Bachelor' was on the bottom of the stacked column, and reversed the legend too. Even when not doing these things, the total degrees held for both types would not sequentially plot, which is why I gave up and tried to plot them manually. What ended up working was placing this earlier in the sequence (overwriting and flipping confusion), which was nice and also annoying. Un-working code below:* \
+*Side note: I could not figure out how to get the proper total degree type numbers to correspondingly appear on the plot. I reversed the plot order so that 'Bachelor' was on the bottom of the stacked column, and reversed the legend to match this too. Even when not doing these things, the `degree_sum` held for both types would not sequentially plot, which is why I gave up and tried to plot them manually. What ended up working was placing this earlier in the sequence (overwriting and flipping confusion), which was nice and also annoying. Un-working code below:* \
 `geom_text(aes(x=census_year, y=degree_sum, label=degree_sum), vjust= -0.5, size=3, color="#262626")`  
 `geom_text(aes(x=2001, y=21,000, label="18,865", colour="#262626", size=3)) +`
 `geom_text(aes(x=2006, y=5,000, label="11,970", colour="#262626", size=3)) +`
@@ -1093,74 +1266,82 @@ Code to transform column percentage values to display with the percent symbol ta
 *My previous stacked bar plots had an y-axis of '100' because I took all of the different trophic algal biomass data (a/m/h) added those together respectively, then added that total together. Then I must've made them into a percentage in order to equate to 100, so there was never a need to use `position="fill"` because 'mean_biomass' was already out of 100 for each trophic type.* \
 
 *Figured it out: it's because a/m/h = total biomass, so converting it to a % was easy. Here, we only have a certain amount of the population. It's not like everyone is included (like degree vs. no degree or ethnicity). It's selective and why % doesn't equal 100%. SO. DUMB. Omg.*
-
-
-```r
-all_bachphd_proportions_fig3= (all_bachphd_proportions_fig1/all_bachphd_proportions_fig2) +
-  plot_layout(ncol=2) +
-  plot_layout(guides="collect") +
-  plot_annotation(tag_levels=c('a','b')) &
-  theme(
-    legend.position="bottom",
-    legend.direction="horizontal")
-all_bachphd_proportions_fig3
-```
-
-![](A2_kozak_files/figure-html/Proportion CA01-CA21 BSc and PhD Figure 3-1.png)<!-- -->
+ 
 
 ```r
 #side note: here, I started to notice that I got back into my 'frantic coding' energy era... not good. Otherwise, things seems to be much more logical and less helter-skelter. Maybe because I visited my old thesis code?
+all_degree_proportions_fig3=(all_degree_proportions_fig1/                         
+                             all_degree_proportions_fig2) +
+  plot_layout(ncol=2) +
+  plot_layout(guides="collect") +
+  plot_annotation(tag_levels=c('a','b')) &
+  theme(legend.position="bottom",
+        legend.direction="horizontal")
+all_degree_proportions_fig3
 ```
+
+![](A2_kozak_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
+
 
 ________________________________________________________________________________
 ## 4. Review of Degree Population Data \
 
+The story type I think I've somehow followed incidentally is the **"Action-Background-Development-Climax-Ending" format:**
+1. **Action (Data Background):** Albeit a sad and uninteresting opening, the particular reason in which this city was selected was due to the parameters that were set for this assignment. The first and initial thought I had related to this geographic location was that I knew of three MSc or PhD students who were living there at the time during my travels. A quick Google search trying to determine something of interest about this region didn't... turn up as much as I had hoped. One piece of information, however, definitely caught my eye: that Kingston, ON apparently had the highest PhD holders per capita in Canada. Cue the 'action' for this story line type. This combined with my only thought or opinion on the city matched perfectly: education. Thus, the investigation into (GG606) PhD studies was born.
 
-story type? Action-Background-Development-Climax-Ending" (ABDCE) format:
+2. **Background (Data Context):** Taking this step somewhat literally... While I knew what I wanted to look at in general, I had to figure out exactly *what* I wanted to look at. I searched for any `cancensus` vectors accessible to me that had any general relation to the topic of 'education' and I was somewhat satisfied with what I found. As was touched on earlier in Section 3, I wanted to know when this increase in PhD holders occurred. If it this came from local resident populations, who would be included within the permanent resident census data, it would be interesting to note whether these degrees increased with post-secondary education popularity throughout the region. This must first relate to the general overarching question of do we see more and more people throughout time getting higher and higher levels of education? My first task was to look at the popularity of bachelor degrees over time, which might lead to eventual PhDs who then continue to stay within the area. This then led to my second main question, which was do we see a corresponding increase in PhDs appearing throughout time as well? Has there been an increasing amount of people with bachelor degrees being granted, then into PhDs? Or do we think that we have external visitors coming to complete their research?  
+
+3. **Development/Climax (Data Analysis):** 
+Q1: Do we see more and more people throughout time within this region getting higher and higher levels of education? 
+-	Yes. The stacked bar plot from census years 2006 to 2021 very clearly shows an overall 4.51% increase in bachelor’s degrees granted within the population in the Kingston, ON CSD region. There appears to be a dramatic 'change' in the percentage of the population who obtained bachelor’s degrees granted from 2001 to 2006. However, we cannot necessarily include the data from 2001 as there was no clear distinction on whether these values include bachelor’s degrees alone, just that they are retained within this education vector commencing at this level. We do not truly know the exact amount of the population that held a bachelor, master, or PhD during this time since all categories of post-secondary education are lumped together. It could very likely be that the other graduate level degree types bulk up this number. I would argue, based on additional bachelor’s degree census data, that the percentage of the population with a bachelor degree might be similar to that of 2006 based on loose overall degree trends. Based on [Queen’s enrollment data](https://www.queensu.ca/planningandbudget/irp/institutional-data/student/enrolment) undergraduate student populations have increased from 2001-2021 by 73.4% and graduate levels by 152%.. which is a lot. This also doesn’t include enrollment data from St. Lawrence (only bachelor’s degrees) or the Royal Military College of Canada (bachelor, master, and PhDs). However, we don’t know with this current level of data who is local and who has moved to the area (excluded from census), nor do these numbers necessarily result in granted degrees. 
+-	The DA geospatial data returns some interesting insights too. While the percentage of the overall population that hold a bachelor degree is consistent, when plotted within each DA we see a different pattern. The highest percentage of the population with bachelor’s degrees is often within the downtown core or suburban heavy area of the district. This makes sense, as people who need to commute to jobs (and need those degrees) are situated. However, from 2006 to 2021 we actually begin to see an increase in the proportion of the population who live rurally holding bachelor degrees. This might be attributed to a couple of things i.) further urban sprawl and development or ii.) the increase in accessibility of obtaining a bachelor’s degree or maintaining a career during/post COVID-19 when most work was online. Food for thought. No area within any census year had a higher bachelor degree holding percentage of 43% regardless of DA location (2006: 35%, 2011: 43%, 2016: 32%, 2021: 37%). 
+-	We also see an increase in the number of people who held a master’s (2.18%) and PhD (0.29%) degree between 2006 and 2021. Again, in the 2011 census year we are unable to distinguish the difference in master’s or PhDs as there were no separate category options to differentiate between graduate study levels. However, overall while more of the population seem to pursue higher and higher levels of education (bachelor degree up) the proportion of each education level stays consistent throughout time (e.g., the amount of master’s degrees present in 2006 are similar if not the same in 2016 and 2021). Just because someone gets a master’s degree does not mean that they will go onto a PhD, but this might also counterbalance individuals who roll over into a PhD from their bachelor’s degree. While these percentages may appear small, it is important to remember that these values reflect the proportion of individuals within the entire region… 50,000 master’s degrees might seem like a lot, but in relation to 1 million people this only equates to 5%. In general, the proportion of all degree level types being granted or held are steadfast between each census year. This leads us to the next question.
+
+Q2: Do we see a corresponding increase in PhDs appearing throughout time as well? Has there been an increasing amount of people with bachelor degrees being granted, that then translate into PhDs?
+-	No. AS was discussed in the previous question, while the percentage of the population who hold PhDs does slightly increase over time, this does not necessarily translate into the amount of PhDs being pursued based on bachelor degree rates alone.  Master’s and PhDs over time seem rather consistent with the overall population, despite their slight increases, whereas bachelor degree frequency does increase. This seems to make sense with the change in demands from workforce employers who typically mandate that a bachelor degree level or higher be required for junior or entry level jobs. 
+-	Geospatial data for master’s and PhDs is much more difficult to discern since they are less populous, and there is the amalgamation of degree types in 2011. Overall, PhDs visually on this spatial scale appear to not differ much- we would need to adjust for a segregated scale with brighter intensities. However, master’s degrees appear to follow a similar trend as the bachelor degree level, in that the more southern area DAs have more people that hold a master’s degree. In general, the highest percentage of master’s degree holders were as follows: 26%, 45.2%, 28.9%, 53.7% from 2006-2021 (locations variable). At least grouping have been corrected to include people over the age of 65 in latter census years. This also makes me wonder about migration between regions, or out of the CSD entirely. I once knew a head scientist (BI-III) that said, “Rarely do the people at the top with PhDs get to stay in the same city that they were born in.” By this he meant that often PhD candidates are able to migrate to locations that specialize in topics of interest relative to the region, which they will then often stay there (ex. Arctic work is common in Manitoba so there are related PhD opportunities there and subsequent jobs). 
 
 
-
-So. Have there been changes in bachelor's degrees throughout census years? Based on the percentage of bachelor degrees granted from 2001 to 2021, *yes!* Overall, 
-
-
-spotty because we don't know whether these are locals, Canadian residents, or immigrants who are contributing to these changes over time without also including that type of data.
-
-We do not truly know the exact amount of the population that held a bachelors, MSc, or PhD during 2001 since all categories of post-secondary education are lumped together. therefore, when we look at the dramatic 'change' in bachelor degrees within 2006 there appears to be a drop. I would argue however, that it could be the other graduate level degree types that make this appear as such. When we look at the change in bachelor degrees from 2006 to 2011 there seems to be more of a gradual 
-
-We also are unable to distinguish the difference in between Master's and PhD holders within 2011, since there were no separate categories for these two levels of graduate education. 
+4. **Ending (Data Resolution):**
+- Overall, while each level of post-secondary degree types (bachelor, master, PhD) does increase with each census year, only bachelor degrees slightly increase in popularity per capita over time, whilst graduate studies (both the master's and PhD level) remain consistent with Kingston's population over time. We see the overall geographic region become 'more' educated further away from the downtown core thanks to bachelor degree popularity, but this does not have an apparent correlation to master or PhD popularity here. 
+- This data was riddled with data gaps or holes, plus needed much more additional analysis or data being pulled in order to formulate a much more thorough story or investigation. Also, clearer and more specific questions would need to be investigated (ex. what does education overall look like? Are there more popular majors that have developed post world events?) to further develop the analysis. While a clickbait-y and catchy tag line from 2009 (that's right.. that claim was made from data prior to 2009) led to a promising data analysis, we would need to gather more data across more regions to be able to attest to this. 
 
 
-we would really need to be looking at the rates of change, rather than just the percentage of degree type holders over the years. also getting the masters class in there somewhere to see if that chohort moved on would be nice, but you can also roll over into a phd. or immigrate into it. 
 
 ________________________________________________________________________________
 ## 5. Concluding Comments and Thoughts \
 
 #### 5.1 Notable Lessons from Mr. Wilke \
 
-1. The chloropleth maps used to visualize the change in proportion of individuals who held a bachelor or PhD degree from 2001-2021 were done so based on a few of Wilke's comments on data visualization. Specifically:
-- Actually, [Figure 4.4 and Figure 4.6](https://clauswilke.com/dataviz/color-basics.html) were of great inspiration to me, as they gave me the idea of the chloropleth rather than attempting a heat map format (population density). I also very much liked the idea of using percentage over population density because no matter how many people there actually were within a DA overtime it kept the comparison consistent. If I were to go via the density route, I would have done a heat map instead (xx degrees/100 people)- also inspired by Wilke. I think I just really wanted the two types to be easily comparable, even though with density it too is dependent on total resident populations, not like simple counts. 
-- Figures 4.4 and 4.6 also got me trying to use diverging colour palettes (PiYG), which I thought was a good idea, but the data here seemed... ill fitted for it. I did however, learn about how many mistakes I was making by selecting somewhat non-monochromatic colour palettes, or [inappropriately using colour within figures...](https://clauswilke.com/dataviz/color-pitfalls.html) this can be fact-checked from my last assignment even. I also paid more attention to the colour scales I *was* using for colour deficiency. In these figures I ended up going with a sequential scale because they, ["will generally not cause any problems for people with color-vision deficiency."](https://clauswilke.com/dataviz/color-pitfalls.html)
+1. The chloropleth maps used to visualize the change in proportion of individuals who held a bachelor, master's, or PhD degree from 2001-2021 were done so based on a few of Wilke's comments on data visualization. Specifically:
+- Actually, [Figure 4.4 and Figure 4.6](https://clauswilke.com/dataviz/color-basics.html) were of great inspiration to me, as they gave me the idea of the chloropleth rather than attempting a heat map format (population density). I also very much liked the idea of using percentage over population density because no matter how many people there actually were within a DA overtime it kept the comparison consistent. If I were to go via the density route, I would have done a heat map instead (xx degrees/100 people)- also inspired by Wilke. I think I just really wanted the two types to be easily comparable, even though with density it too is dependent on total resident populations and not just simple counts. 
+- Figures 4.4 and 4.6 also got me trying to use diverging colour palettes (PiYG), which I thought was a good idea, but the data here seemed... ill fitted for it. I did, however, learn about how many mistakes I was making by selecting somewhat non-monochromatic colour palettes, or [inappropriately using colour within figures...](https://clauswilke.com/dataviz/color-pitfalls.html) this can be fact-checked from my last assignment even. I also paid more attention to the colour scales I *was* using for colour deficiency. In these figures I ended up going with a sequential scale because they, ["will generally not cause any problems for people with color-vision deficiency."](https://clauswilke.com/dataviz/color-pitfalls.html)
 - I got the 'a-okay' from Wilke to use [lighter colours to highlight higher intensities](https://clauswilke.com/dataviz/geospatial-data.html) within chloropleth maps, so long as the background was dark. This is true for the inverse as well. Dark backgrounds were stated as being okay, should the graphic be viewed online rather than in traditional print. Thanks, Wilke #darkness4ever.  
-- The omission of figure titles and [axis labels](https://clauswilke.com/dataviz/figure-titles-captions.html) when they are very apparent, much like the apparent coordinate systems being used here. As he states, if the image is not a standalone then it does not require a header title. However, these figures also fail to include a sufficient figure title within the caption.
+- The omission of figure titles and [axis labels](https://clauswilke.com/dataviz/figure-titles-captions.html) when they are very apparent, much like the apparent coordinate systems being used here. As he states, if the image is not a standalone then it does not require a header title. However, these figures also fail to include a sufficient figure title within the caption within R.
 - One thing I did keep were the background grid lines to help, ["frame the plot and keep it as a single visual unit"](https://clauswilke.com/dataviz/balance-data-context.html) rather than have it float away into the darkness of the black abyss-y background. Even on a light coloured background, I disliked the total openness of [certain cancensus plots](https://mountainmath.github.io/cancensus/articles/Making_maps_with_cancensus.html). I did darken the grid lines to not have them be overpowering and rather work with my colour choices, just as Wilke says. At least this was the attempt at doing so. 
-- One of the many things I actually do regret not going through with is not creating more explicit percentage categories (ex: 0-25%, 26-50%, etc.) in order to make the coloured DAs more legible. However, it just... appeared off? Also, since there were so many DAs with a very little proportion of 50% or more during my first few plots I got scared off of doing it. 
+- One of the many things I actually do regret not going through with is not creating more explicit percentage categories (ex: 0-25%, 26-50%, etc.) in order to make the coloured DAs more legible. However, it just... appeared off? Also, since there were so many DAs with a very little proportion of 50% or more during my first few plots I got scared off of doing it. \
 
-2. The comparison of bachelor degrees and PhD's over time was done so based on these Wilke comments:
-- Initially I had wanted to do a heat map but in my head there would only have been five x-axis sections (years 2001-2021) and three y-axis sections (BSc, MSc, PhD levels), which would have given us a choppy and unclear visual of how many individuals held each degree type over time, plus it just didn't make sense. I then wanted to show proportion change in another way: classic case of [bar charts](https://clauswilke.com/dataviz/visualizing-proportions.html) of which stacked ones were okay-ed by Wilke when there are only two comparable variables (bachelor and PhD). This makes any changes or patterns more apparent especially over a constant variable, rather than attempting to distinguish changes for a multitude of seemingly static variables.
-- I manually chose two colours for the PhD and bachelor plots that were a.) in keeping with the previous geospatial data plots (i.e., the same “visual language”) that were generated to [keep overall plot harmony and unisense]() and b.) were still visible to anyone with [colour defiencies.](https://clauswilke.com/dataviz/redundant-coding.html#designing-legends-with-redundant-coding) These colours were actually two of the nine provided by Wilke in his manual colour palette (PhD #56B4E9 and bachelor #CC79A7). 
-- When constructing the `all_bachphd_proportions_fig3` facet plot I kept [alignments consistent and did not have to include any hack job labeling](https://clauswilke.com/dataviz/multi-panel-figures.html) Here, 'a' and 'b' are clearly labelled and in an appropriate spot within the overall figure. 
+
+2. The comparison of bachelor, master's, and PhD degrees over time was done so based on these Wilke comments:
+- Initially I had wanted to do a heat map but in my head there would only have been five x-axis sections (years 2001-2021) and three y-axis sections (BSc, MSc, PhD levels), which would have given us a choppy and unclear visual of how many individuals held each degree type over time, plus it just didn't make sense. I then wanted to show proportion change in another way: classic case of [bar charts](https://clauswilke.com/dataviz/visualizing-proportions.html) of which stacked ones were okay-ed by Wilke when there are only two comparable variables (bachelor and PhD). This makes any changes or patterns more apparent especially over a constant variable, rather than attempting to distinguish changes for a multitude of seemingly static variables. However, when I went back to include the Master's level data, I knew that I had to include the actual stacked values of each category in order to more accurately represent 
+- I manually chose three colours for the bachelor/master's/PhD plots that were a.) in keeping with the previous geospatial data plots (i.e., the same “visual language”) that were generated to [keep overall plot harmony and unisense]() and b.) were still visible to anyone with [colour defiencies.](https://clauswilke.com/dataviz/redundant-coding.html#designing-legends-with-redundant-coding) These colours were actually three of the nine provided by Wilke in his manual colour palette (bachelor #CC79A7, master's #009E73. and PhD #56B4E9). 
+- When constructing the `all_degree_proportions_fig3` facet plot I kept [alignments consistent and did not have to include any hack job labeling.](https://clauswilke.com/dataviz/multi-panel-figures.html) Here, 'a' and 'b' are clearly labelled and in an appropriate spot within the overall figure. 
 - I tried to make these plots look clean but, as Wilke puts it, not having them 'float in space' meant that while I implemented the light minimalist theme, I also kept the [horizontal grey x-axis lines](https://clauswilke.com/dataviz/balance-data-context.html) to try and keep the plot(s) grounded since they also were in the "direction along which the numbers of interest vary."
 
+What was perhaps the most frequently visited section was the one titled, ["Telling a story and making a point"](https://clauswilke.com/dataviz/telling-a-story.html) as I could a.) not really understand the Stephan Hawking example(s) and b.) really needed to think on how to tell a story with a point rather than just spew data- which is what I've done for all my data life. Kinda a good resource by Mr. Wilke. \   
 
-What was perhaps the most frequently visited section was the one titled, ["Telling a story and making a point"](https://clauswilke.com/dataviz/telling-a-story.html) as I could a.) not really understand the Stephan Hawking example(s) and b.) really needed to think on how to tell a story with a point rather than just spew data- which is what I've done for all my data life. Kinda a good resource by Mr. Wilke.   
 
 
 #### 5.2 General Closing Comments: \
 - The `cancensus` package information was extremely detailed and useful. It made figuring out how to access the data very clear and somewhat straightforward. So that was super nice and useful to have, especially since working with this data is truly... endless, wow. There are millions and millions of things to look at, compute, code and design for. Great data set without any limitations (except API rates), but one would have to have a fairly clear picture or idea of where to go with the data. I personally started off waaaay too large of any overall analysis that I wanted to do, which made this assignment seem very overwhelming, so I had to dramatically scale back.
--I don't know why the `sf` plots for the Kingston region changed between 2006-2016 and seems to not account for unchanging water bodies. Without much investigation into this, I'd assume the at geospatial data for these years simply smushed these DA locations together without leaving an absence for landmarks. It makes the plot less aesthetic and somewhat bothers me but I did not have the time to go back and troubleshoot this. 
+- I don't know why the `sf` plots for the Kingston region changed between 2006-2016 and seems to not account for unchanging water bodies. Without much investigation into this, I'd assume that the geospatial data for these years simply smushed these DA locations together without leaving an absence for landmarks. It makes the plot less aesthetic and somewhat bothers me but I did not have the time to go back and troubleshoot this. 
+<<<<<<< HEAD
+- One thing I noticed was how frequently I switched from the Royal 'We' to the first person 'I' throughout the assignment. I suspect that it's because as I'm coding in the moment I am trying to discern to myself what it is that I am trying to do, but when trying to communicate that back to the masses I it switches. I do not know how to more readily combat this, so I apologize. 
+- I felt like I was doing this assignment sometimes twice... once to meet the specified criteria, and a second time with a geographic location that I was familiar with (Winnipeg) to see what results were coming back so as to understand the equivalent for the city I didn't know. I feel like one would return something more thorough if they could work within whatever chosen region because the investigation would be more self explanatory. But alas, this is a good lesson on the challenges of 'unknown' data.
+- Holy hell, do I ever get the whole 'making functions' point. When I had to create the master's level data all of a sudden copying and editing those *maaasive* chunks of code was horrid and so easy to make a mistake. Someone would have to go back, edit the error then edit all of those chunks again. Point = understood. 
 - One thing I noticed was how frequently I switched from the Royal 'We' to the first person 'I' throughout the assignment. I do not know how to more readily combat this, so I apologize. 
-- I felt like I was doing this assignment sometimes twice... once to meet the specified criteria, and a second time with a geographic location that I was familiar with (Winnipeg) to see what results were coming back so as to understand the equivalent for the city I didn't know. I feel like one would return something more thorough if they could work within whatever chosen region because the investigation would be more self explanatory. But alas, the challenges of 'unknown' data. 
-- Despite some common troubleshooting issues, this data did not cause me a lot of greif (well maintained?) and I actually really did enjoy myself. If this was a data set that one had to work with for an undisclosed amount of time I don't think that I would complain. Code on, bro (no cry)! :)
+- I felt like I was doing this assignment sometimes twice... once to meet the specified criteria, and a second time with a geographic location that I was familiar with (Winnipeg) to see what results were coming back so as to understand the equivalent for the city I didn't know. I feel like one would return something more thorough if they could work within whatever chosen region because the investigation would be more self explanatory. But alas, this is a good lesson on the challenges of 'unknown' data. 
+- Despite some common troubleshooting issues, this data actually did not cause me a lot of grief (well maintained?) and I actually really did enjoy myself. If this was a data set that one had to work with for an undisclosed amount of time I don't think that I would complain. Code on, bros (no cry)! :)
 
 
 
@@ -1198,6 +1379,12 @@ print(CA01_bachelor_fig)
 
 ![](A2_kozak_files/figure-html/3.1.1.: Q1 CA01 Figure A-1.png)<!-- -->
 
+```r
+ggsave(here("03_figures/census_geospatial_data", "bach_CA01.png"), CA01_bachelor_fig,
+       width=190, height=120, units="mm")
+```
+
+
 
 ```r
 CA06_bachelor_fig=CA06_bachelor %>%
@@ -1227,6 +1414,7 @@ print(CA06_bachelor_fig)
 ![](A2_kozak_files/figure-html/3.1.1.: Q1 CA06 Figure A-1.png)<!-- -->
 
 
+
 ```r
 CA11_bachelor_fig=CA11_bachelor %>%
   filter(region_name=="Kingston") %>%  
@@ -1253,6 +1441,7 @@ print(CA11_bachelor_fig)
 ```
 
 ![](A2_kozak_files/figure-html/3.1.1.: Q1 CA11 Figure A-1.png)<!-- -->
+
 
 
 ```r
@@ -1313,6 +1502,160 @@ print(CA21_bachelor_fig)
 
 ![](A2_kozak_files/figure-html/3.1.1.: Q1 CA21 Figure A-1.png)<!-- -->
 
+```r
+ggsave(here("03_figures/census_geospatial_data", "bach_CA21.png"), CA21_bachelor_fig,
+       width=190, height=120, units="mm")
+```
+
+
+<<<<<<< HEAD
+#### 6.2 Percentage of Master's Degree Holders 2001-2021 \
+Here, the five census plots from 2001-2021 for the total percent of master's degrees held within Kingston, ON DAs are located as stills for viewing.
+
+
+```r
+CA01_msc_fig=CA01_bachelor %>%     #keep same data frame because same data...
+  filter(region_name=="Kingston") %>%  
+#Generate the plot:  
+  ggplot() +
+  geom_sf(aes(fill=percentage)) +                       #make data plot by %
+  scale_fill_distiller(name="Master's Degree Holders %",
+                       palette="BuGn",                 #change colour scale new var
+                       limits=c(0, 100)) +            #keep scale from 0-100%
+#Plot aesthetics:  
+  theme_minimal() +
+  theme(plot.background=element_rect(fill="black"),        #make figure background dark
+        panel.grid.major=element_line(colour="#262626")) + #colourlat long grid lines
+  guides(fill=guide_colourbar(barwidth=10, barheight=0.5,    #edit key size here bc bar
+                             direction="horizontal", title.position="top", 
+                             title.hjust=0.3)) +        
+  theme(legend.position="bottom", legend.title=element_text(size=10, colour="white"), 
+        legend.text=element_text(size=11, colour="white")) +     #edit legend themes    
+#Generate labels:  
+geom_text(x= -76.65, y=44.47, label="2001", colour="white", size=7)
+  
+print(CA01_msc_fig)
+```
+
+![](A2_kozak_files/figure-html/3.1.1: Q1.5 CA01 Figure A-1.png)<!-- -->
+
+```r
+ggsave(here("03_figures/census_geospatial_data", "msc_CA01.png"), CA01_msc_fig,
+       width=190, height=120, units="mm")
+```
+
+
+```r
+CA06_msc_fig=CA06_msc %>%
+  filter(region_name=="Kingston") %>%  
+#Generate the plot:  
+  ggplot() +
+  geom_sf(aes(fill=percentage)) +                       #make data plot by %
+  scale_fill_distiller(name="Master's Degree Holders %",
+                       palette="BuGn",
+                       limits=c(0, 100)) +            #keep scale from 0-100%
+#Plot aesthetics:  
+  theme_minimal() +
+  theme(plot.background=element_rect(fill="black"),        #make figure background dark
+        panel.grid.major=element_line(colour="#262626")) + #colourlat long grid lines
+  guides(fill=guide_colourbar(barwidth=10, barheight=0.5,    #edit key size here bc bar
+                             direction="horizontal", title.position="top", 
+                             title.hjust=0.3)) +        
+  theme(legend.position="bottom", legend.title=element_text(size=10, colour="white"), 
+        legend.text=element_text(size=11, colour="white")) +     #edit legend themes    
+#Generate labels:  
+geom_text(x= -76.65, y=44.47, label="2006", colour="white", size=7)
+  
+print(CA06_msc_fig)
+```
+
+![](A2_kozak_files/figure-html/3.1.1: Q1.5 CA06 Figure A-1.png)<!-- -->
+
+
+```r
+CA11_msc_fig=CA11_msc %>%
+  filter(region_name=="Kingston") %>%  
+#Generate the plot:  
+  ggplot() +
+  geom_sf(aes(fill=percentage)) +                       #make data plot by %
+  scale_fill_distiller(name="Master's Degree Holders %",
+                       palette="BuGn",
+                       limits=c(0, 100)) +            #keep scale from 0-100%
+#Plot aesthetics:  
+  theme_minimal() +
+  theme(plot.background=element_rect(fill="black"),        #make figure background dark
+        panel.grid.major=element_line(colour="#262626")) + #colourlat long grid lines
+  guides(fill=guide_colourbar(barwidth=10, barheight=0.5,    #edit key size here bc bar
+                             direction="horizontal", title.position="top", 
+                             title.hjust=0.3)) +        
+  theme(legend.position="bottom", legend.title=element_text(size=10, colour="white"), 
+        legend.text=element_text(size=11, colour="white")) +     #edit legend themes    
+#Generate labels:  
+geom_text(x= -76.65, y=44.47, label="2011", colour="white", size=7)
+  
+print(CA11_msc_fig)
+```
+
+![](A2_kozak_files/figure-html/3.1.1: Q1.5 CA11 Figure A-1.png)<!-- -->
+
+*Side note: in 2011 the census data for those with a degree type over the age of 15 does not specify between the master's and PhD level. These data are therefore the same for the PhD figure.*
+
+
+```r
+CA16_msc_fig=CA16_msc %>%
+  filter(region_name=="Kingston") %>%  
+#Generate the plot:  
+  ggplot() +
+  geom_sf(aes(fill=percentage)) +                       #make data plot by %
+  scale_fill_distiller(name="Master's Degree Holders %",
+                       palette="BuGn",
+                       limits=c(0, 100)) +            #keep scale from 0-100%
+#Plot aesthetics:  
+  theme_minimal() +
+  theme(plot.background=element_rect(fill="black"),        #make figure background dark
+        panel.grid.major=element_line(colour="#262626")) + #colourlat long grid lines
+  guides(fill=guide_colourbar(barwidth=10, barheight=0.5,    #edit key size here bc bar
+                             direction="horizontal", title.position="top", 
+                             title.hjust=0.3)) +        
+  theme(legend.position="bottom", legend.title=element_text(size=10, colour="white"), 
+        legend.text=element_text(size=11, colour="white")) +     #edit legend themes    
+#Generate labels:  
+geom_text(x= -76.65, y=44.47, label="2016", colour="white", size=7)
+  
+print(CA16_msc_fig)
+```
+
+![](A2_kozak_files/figure-html/3.1.1: Q1.5 CA16 Figure A-1.png)<!-- -->
+
+
+```r
+#`region_name` changes here from the actual alphabetic name to numeric codes...
+CA21_msc_fig=CA21_msc %>%
+  filter(csd_uid=="3510010") %>%  
+#Generate the plot:  
+  ggplot() +
+  geom_sf(aes(fill=percentage)) +                       #make data plot by %
+  scale_fill_distiller(name="Master's Degree Holders %",
+                       palette="BuGn",
+                       limits=c(0, 100)) +            #keep scale from 0-100%
+#Plot aesthetics:  
+  theme_minimal() +
+  theme(plot.background=element_rect(fill="black"),        #make figure background dark
+        panel.grid.major=element_line(colour="#262626")) + #colourlat long grid lines
+  guides(fill=guide_colourbar(barwidth=10, barheight=0.5,    #edit key size here bc bar
+                             direction="horizontal", title.position="top", 
+                             title.hjust=0.3)) +        
+  theme(legend.position="bottom", legend.title=element_text(size=10, colour="white"), 
+        legend.text=element_text(size=11, colour="white")) +     #edit legend themes    
+#Generate labels:  
+geom_text(x= -76.65, y=44.47, label="2021", colour="white", size=7)
+  
+print(CA21_msc_fig)
+```
+
+![](A2_kozak_files/figure-html/3.1.1: Q1.5 CA21 Figure A-1.png)<!-- -->
+
+
 #### 6.2 Percentage of PhD Degree Holders 2001-2021 \
 Here, the five census plots from 2001-2021 for the total percent of doctoral degrees held within Kingston, ON DAs are located as stills for viewing.
 
@@ -1342,6 +1685,12 @@ print(CA01_phd_fig)
 ```
 
 ![](A2_kozak_files/figure-html/3.1.1: Q2 CA01 Figure A-1.png)<!-- -->
+
+
+```r
+ggsave(here("03_figures/census_geospatial_data", "phd_CA01.png"), CA01_phd_fig,
+       width=190, height=120, units="mm")
+```
 
 
 ```r
@@ -1397,6 +1746,11 @@ print(CA11_phd_fig)
 
 ![](A2_kozak_files/figure-html/3.1.1: Q2 CA11 Figure A-1.png)<!-- -->
 
+```r
+ggsave(here("03_figures/census_geospatial_data", "phd_CA11.png"), CA11_phd_fig,
+       width=190, height=120, units="mm")
+```
+
 
 ```r
 CA16_phd_fig=CA16_phd %>%
@@ -1423,6 +1777,11 @@ print(CA16_phd_fig)
 ```
 
 ![](A2_kozak_files/figure-html/3.1.1: Q2 CA16 Figure A-1.png)<!-- -->
+
+```r
+ggsave(here("03_figures/census_geospatial_data", "phd_CA16.png"), CA16_phd_fig,
+       width=190, height=120, units="mm")
+```
 
 
 ```r
@@ -1451,4 +1810,10 @@ print(CA21_phd_fig)
 ```
 
 ![](A2_kozak_files/figure-html/3.1.1: Q2 CA21 Figure A-1.png)<!-- -->
+
+
+```r
+ggsave(here("03_figures/census_geospatial_data", "phd_CA21.png"), CA21_phd_fig,
+       width=190, height=120, units="mm")
+```
 
